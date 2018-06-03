@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+
+	"github.com/gin-gonic/gin"
 )
 
 func indexAction(c *gin.Context) {
@@ -28,22 +29,15 @@ func registerAction(c *gin.Context) {
 		return
 	}
 
-	db, err := gorm.Open("mysql", dbUsername+":"+dbPassword+"@/"+dbDatabase+"?charset=utf8&parseTime=True&loc=Local")
-	defer db.Close()
+	userProvider := Container.Resolve("user_provider").(UserProviderInterface)
+	guard := Container.Resolve("guard").(GuardInterface)
+	db := Container.Resolve("database").(*gorm.DB)
 
-	var mysqlUserProvider UserProviderInterface = &MysqlUserProviderStruct{db}
-
-	if mysqlUserProvider.IsEmailExist(user.Email) {
+	if userProvider.IsEmailExist(user.Email) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error": "Email already taken",
 		})
 		return
-	}
-
-	var guard GuardInterface = &JwtGuard{
-		secret:       []byte(secretKey),
-		userProvider: mysqlUserProvider,
-		resolveBy:    "username",
 	}
 
 	user.Salt = strconv.Itoa(rand.Int())
@@ -79,23 +73,16 @@ func loginAction(c *gin.Context) {
 		return
 	}
 
-	db, err := gorm.Open("mysql", dbUsername+":"+dbPassword+"@/"+dbDatabase+"?charset=utf8&parseTime=True&loc=Local")
-	defer db.Close()
+	userProvider := Container.Resolve("user_provider").(UserProviderInterface)
+	guard := Container.Resolve("guard").(GuardInterface)
 
-	var mysqlUserProvider UserProviderInterface = &MysqlUserProviderStruct{db}
-
-	user, err := mysqlUserProvider.GetUserBy(loginForm.Email, loginForm.Password)
+	user, err := userProvider.GetUserBy(loginForm.Email, loginForm.Password)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
 		return
-	}
-
-	var guard GuardInterface = &JwtGuard{
-		secret:       []byte(secretKey),
-		userProvider: mysqlUserProvider,
 	}
 
 	token, err := guard.CreateSignedTokenFromID(int(user.ID))

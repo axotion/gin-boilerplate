@@ -15,12 +15,12 @@ type User struct {
 	Password string     `gorm:"size:255" json:"password,omitempty" binding:"required"`
 	Salt     string     `gorm:"size:255" json:"-"`
 	Address  string     `gorm:"index:addr" json:"address" binding:"required"`
-	Profile  Profile    `gorm:"foreignkey:UserID;association_foreignkey:Refer"`
+	Profile  Profile    `gorm:"foreignkey:UserID;association_foreignkey:Refer" json:"-"`
 }
 
 type Profile struct {
 	gorm.Model
-	Links  []string `gorm:"type:varchar(100);" json:"links" binding:"required"`
+	Links  []string `gorm:"type:varchar(100);" json:"-"`
 	UserID uint
 	Refer  int
 }
