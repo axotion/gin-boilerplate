@@ -16,7 +16,7 @@ const authMethod = "JWT"
 const apiVersion = "1.0.0"
 const dbUsername = "root"
 const dbPassword = ""
-const dbDatabase = "nastoletni"
+const dbDatabase = ""
 
 var test int = func() int {
 	return 1
